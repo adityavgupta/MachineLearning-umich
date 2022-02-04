@@ -26,7 +26,7 @@ def main():
     # Then the coefficient correpsonding to this column is an intercept term.
     X = np.concatenate((np.ones((N, 1)), X), axis=1)
     w = weightsFromNewtonRaphson(X,Y,100)
-    xd = np.array([np.min(X), np.max(X)])
+    xd = np.array([np.min(X[:,1]), np.max(X[:,1])])
     b = -w[0,0]/w[2,0]
     m = -w[1,0]/w[2,0]
     yd = m*xd + b
