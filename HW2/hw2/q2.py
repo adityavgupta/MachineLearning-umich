@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+from sklearn.linear_model import LogisticRegression
 def softmaxRegGA(X, Y, alpha, nIters, N,M,K):
     w = np.zeros((M,K))
     indic = np.array([[1 if Y[i] == m else 0 for m in range(K-1)]
@@ -23,9 +23,15 @@ def main():
     q2y_test = np.array(q2_data[q2_data_files[3]])
     N = q2x_train.shape[0]
     M = q2x_train.shape[1]
-    K = int(max(q2y_test)[0])
+    K = int(max(q2y_train)[0])+1
     
-    trained_weights = softmaxRegGA(q2x_train, q2y_train, 0.0005, 100, N, M, K)
-    print(trained_weights)
+    trained_weights = softmaxRegGA(q2x_train, q2y_train, 0.0005, 200, N, M, K)
+    denom = np.sum(np.exp(q2x_test@trained_weights), axis=1).reshape(-1,1)
+    p = np.exp(q2x_test@trained_weights)/denom
+    pred = np.argmax(p, axis=1)
+    
+    print("Accuracy:", np.sum(pred == q2y_test.T[0])/q2y_test.shape[0])
+
+    
 if __name__=="__main__":
     main()
