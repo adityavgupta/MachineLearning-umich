@@ -5,7 +5,6 @@ def softmaxRegGA(X, Y, alpha, nIters, N,M,K):
     w = np.zeros((M,K))
     indic = np.array([[1 if Y[i] == m else 0 for m in range(K-1)]
                      for i in range(N)])
-
     for iter in range(nIters):
         denom = (1+np.sum(np.exp(X@w)[:, 0:K-1], axis=1)).reshape(-1,1)
         p = np.exp(X@w[:,0:K-1])/denom
