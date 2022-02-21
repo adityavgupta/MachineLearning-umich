@@ -13,27 +13,45 @@ iterNums = [5, 50, 100, 1000, 5000, 6000]
 
 def svm_train_bgd(matrix: np.ndarray, label: np.ndarray, nIter: int):
     # Implement your algorithm and return state (e.g., learned model)
-    state = {}
     N, D = matrix.shape
 
     ##################################
     # TODO: Implement your code here #
     ##################################
-    raise NotImplementedError
-
-    return state
+    w = np.zeros((D,1))
+    b = 0
+    
+    for j in range(1,nIter+1):
+        indic = np.where(label * (matrix @ w + b) < 1, 1, 0)
+        w_grad = w - C*(matrix.T@(indic*label)) # Nx1
+        b_grad = np.sum(-C*(indic*label), axis=0)[0]
+        alpha = eta/(1+j*eta)
+        w = w - alpha*w_grad
+        b = b - 0.01*alpha*b_grad
+    return {'w':w, 'b':b}
 
 
 def svm_train_sgd(matrix: np.ndarray, label: np.ndarray, nIter: int):
     # Implement your algorithm and return state (e.g., learned model)
-    state = {}
+    
     N, D = matrix.shape
 
     ##################################
     # TODO: Implement your code here #
     ##################################
-    raise NotImplementedError
+    w = np.zeros((D,1))
+    b = 0
 
+    for j in range(1,nIter+1):
+        alpha = eta/(1+j*eta)
+        for i in range(N):
+            h = (matrix[i]@w)+b
+            w_grad = (1/N)*w - C*(label[i]*h < 1)*(label[i]*(matrix[i].reshape(-1,1)))
+            b_grad = -C*(label[i]*h < 1)*label[i]
+            w = w - alpha*w_grad
+            b = b - 0.01*alpha*b_grad
+    state = {"w":w, "b":b}
+    
     return state
 
 
@@ -44,15 +62,18 @@ def svm_test(matrix: np.ndarray, state):
     ##################################
     # TODO: Implement your code here #
     ##################################
-    raise NotImplementedError
-
+    y_hat = (matrix @ state['w']) + state['b']
+    output = np.where(y_hat > 0, 1, -1)
     return output
 
 
-def evaluate(output: np.ndarray, label: np.ndarray, nIter: int) -> float:
+def evaluate(output: np.ndarray, label: np.ndarray, nIter: int, state) -> float:
     # Use the code below to obtain the accuracy of your algorithm
     accuracy = (label * output > 0).sum() * 1. / len(output)
-    print('[Iter {:4d}: accuracy = {:2.4f}%'.format(nIter, 100 * accuracy))
+    
+    print('Iter {:4d}:\naccuracy = {:2.4f}%'.format(nIter, 100 * accuracy))
+    print("w: ", state['w'])
+    print("b: ", state['b'], "\n")
 
     return accuracy
 
@@ -80,13 +101,14 @@ def run_bgd(train_x, train_y, test_x, test_y):
     *   Parameter b
     *   Test accuracy (%)
     '''
+   
     for nIter in iterNums:
         # Train
         state = svm_train_bgd(train_x, train_y, nIter)
 
         # TODO: Test and evluate
         prediction = svm_test(test_x, state)
-        evaluate(prediction, test_y, nIter)
+        evaluate(prediction, test_y, nIter, state)
 
 
 def run_sgd(train_x, train_y, test_x, test_y):
@@ -106,12 +128,14 @@ def run_sgd(train_x, train_y, test_x, test_y):
 
         # TODO: Test and evluate
         prediction = svm_test(test_x, state)
-        evaluate(prediction, test_y, nIter)
+        evaluate(prediction, test_y, nIter, state)
 
 
 def main():
     train_x, train_y, test_x, test_y = load_data()
+    print("###### SVM Batch Gradient Descent ######")
     run_bgd(train_x, train_y, test_x, test_y)
+    print("###### SVM Stochastic Gradient Descent ######")
     run_sgd(train_x, train_y, test_x, test_y)
 
 
