@@ -43,12 +43,33 @@ def main():
     dataMatrix_test, tokenlist, category_test = readMatrix('q5_data/MATRIX.TEST')
 
     # Train
-    raise NotImplementedError("Implement your code here.")
+    clf = LinearSVC(max_iter=20000)
+    clf.fit(dataMatrix_train, category_train)
+    pred = clf.predict(dataMatrix_test)
+    print("##### 5a ######")
+    # test and evaluate
+    evaluate(pred, category_test)
 
-    # Test and evluate
-    prediction = np.ones(dataMatrix_test.shape[0])  # TODO: This is a dummy prediction.
-    evaluate(prediction, category_test)
-
-
+    print("\n##### 5b ######")
+    #50
+    t_list = [50,100,200,400,800,1400]
+    errs = []
+    for test_set in t_list:
+        dmtrain, tklist, ctrain = readMatrix('q5_data/MATRIX.TRAIN.'+str(test_set))
+        pred2 = clf.fit(dmtrain, ctrain).predict(dataMatrix_test)
+        print("train"+str(test_set)+" error")
+        er = evaluate(pred2, category_test)
+        errs.append(er*100)
+        test_list = abs(clf.decision_function(dmtrain))
+        print("Num of support vectors:", sum(i < 1 for i in test_list), "\n")
+    
+    plt.figure()
+    plt.plot(t_list, errs, marker='o')
+    plt.xlabel("Training size")
+    plt.ylabel("Test Set Error (%)")
+    plt.grid(True)
+    plt.savefig("q5.png")
+    plt.show()
+    
 if __name__ == '__main__':
     main()
