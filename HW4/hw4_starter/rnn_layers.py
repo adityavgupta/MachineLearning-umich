@@ -187,7 +187,8 @@ def temporal_fc_forward(x, w, b):
     ###########################################################################
     # TODO: Implement the forward pass.
     ###########################################################################
-
+    out = x@w + b
+    cache = (x, w, b)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -202,6 +203,7 @@ def temporal_fc_backward(dout, cache):
     Input:
     - dout: Upstream gradients of shape (N, T, M)
     - cache: Values from forward pass
+            -> x (N,T,D)
     Returns a tuple of:
     - dx: Gradient of input, of shape (N, T, D)
     - dw: Gradient of weights, of shape (D, M)
@@ -212,7 +214,10 @@ def temporal_fc_backward(dout, cache):
     ###########################################################################
     # TODO: Implement the backward pass.
     ###########################################################################
-
+    x, w, b = cache
+    dx = dout@w.T
+    dw = np.sum(np.matmul(x.transpose(0,2,1), dout), axis=0)
+    db = np.sum(dout, axis=(0,1))
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################

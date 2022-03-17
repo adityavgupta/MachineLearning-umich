@@ -38,7 +38,10 @@ class SoftmaxClassifier:
         # biases of the first fully-connected layer, and keys 'W2' and 'b2' for    #
         # the weights and biases of the output affine layer.                       #
         ############################################################################
-
+        self.params['W1'] = np.random.normal(loc=0.0, scale=weight_scale, size=(input_dim, hidden_dim))
+        self.params['b1'] = np.zeros(hidden_dim)
+        self.params['W2'] = np.random.normal(loc=0.0, scale=weight_scale, size=(hidden_dim, num_classes))
+        self.params['b2'] = np.zeros(num_classes)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -65,6 +68,9 @@ class SoftmaxClassifier:
         # TODO: Implement the forward pass for the two-layer net, computing the    #
         # class scores for X and storing them in the scores variable.              #
         ############################################################################
+        o_fc1, c_fc1 = fc_forward(X, self.params['W1'], self.params['b1'])
+        o_relu, c_relu = relu_forward(o_fc1)
+        scores, c_fc2 = fc_forward(o_relu, self.params["W2"], self.params["b2"])
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -82,7 +88,10 @@ class SoftmaxClassifier:
         # loss using softmax, and make sure that grads[k] holds the gradients for  #
         # self.params[k].                                                          #
         ############################################################################
-
+        loss, dx = softmax_loss(scores, y)
+        dx_fcb2, grads["W2"], grads["b2"] = fc_backward(dx, c_fc2)
+        dx_rb = relu_backward(dx_fcb2, c_relu)
+        dx_fcb1, grads["W1"], grads["b1"] = fc_backward(dx_rb, c_fc1)
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################

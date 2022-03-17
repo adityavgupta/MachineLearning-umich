@@ -158,7 +158,6 @@ class TestHW4(unittest.TestCase):
         dout = np.random.randn(*x.shape)
 
         dx_num = eval_numerical_gradient_array(lambda x: layers.relu_forward(x)[0], x, dout)
-
         _, cache = layers.relu_forward(x)
         dx = layers.relu_backward(dout, cache)
 
@@ -225,8 +224,6 @@ class TestHW4(unittest.TestCase):
         print('\nTesting softmax_loss:')
         print('loss: ', loss)
         print('dx error: ', rel_error(dx_num, dx))
-        print()
-
         np.testing.assert_allclose(loss, 2.3, atol=0.05)
         np.testing.assert_allclose(dx, dx_num, atol=1e-7)
 

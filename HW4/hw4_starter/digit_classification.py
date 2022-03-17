@@ -22,7 +22,7 @@ def main():
         'X_val': np.array(x_train[55000:], np.float32).reshape((5000, -1)),  # validation data
         'y_val': np.array(y_train[55000:], np.int32),  # validation labels
     }
-    model = softmax.SoftmaxClassifier(hidden_dim=100)
+    model = softmax.SoftmaxClassifier(hidden_dim=250)
 
     # data preprocessing for neural network with convolutional layers
     # data = {
