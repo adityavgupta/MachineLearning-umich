@@ -206,7 +206,7 @@ def finetune(device, dataloaders, dataset_sizes, class_names):
 
     # The visualization function is for you to see the performance of the model on
     # training images and validation images. It is not necessary for you to call it. 
-    #visualize_model(device, dataloaders, model_ft, class_names)
+    visualize_model(device, dataloaders, model_ft, class_names)
 
 
 def freeze(device, dataloaders, dataset_sizes, class_names):
