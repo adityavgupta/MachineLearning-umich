@@ -129,6 +129,16 @@ class CaptioningRNN:
         # defined above to store loss and gradients; grads[k] should give the      #
         # gradients for self.params[k].                                            #
         ############################################################################
+        o_fc1, c_fc1 = fc_forward(features, W_proj, b_proj)
+        o_we, c_we = word_embedding_forward(captions_in, W_embed)
+        o_rnn, c_rnn = rnn_forward(o_we.transpose(1,0,2), o_fc1, Wx, Wh, b)
+        o4, c4 = temporal_fc_forward(o_rnn.transpose(1,0,2), W_vocab, b_vocab)
+        loss, dout = temporal_softmax_loss(o4, captions_out, mask)
+
+        dx4, grads["W_vocab"], grads["b_vocab"] = temporal_fc_backward(dout, c4)
+        dx3, dh3, grads["Wx"], grads["Wh"], grads['b'] = rnn_backward(dx4.transpose(1,0,2), c_rnn)
+        grads["W_embed"] = word_embedding_backward(dx3.transpose(1,0,2), c_we)
+        dx1, grads["W_proj"], grads["b_proj"] = fc_backward(dh3, c_fc1)
 
         ############################################################################
         #                             END OF YOUR CODE                             #
