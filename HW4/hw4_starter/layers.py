@@ -1,4 +1,6 @@
 from builtins import range
+from multiprocessing import pool
+from xml.etree.ElementTree import indent
 import numpy as np
 import math
 import scipy.signal
@@ -98,6 +100,30 @@ def relu_backward(dout, cache):
     ###########################################################################
     return dx
 
+def index_generator(C, H, W, H_p, W_p, stride=1):
+  HH = (H- H_p)//stride + 1
+  WW = (W-W_p)//stride + 1
+  r1 = np.arange(W_p)
+  R = np.tile(r1, H_p).reshape(H_p,W_p)
+  R += W * np.arange(H_p).reshape(-1,1)
+  R = R.flatten()
+
+  RGB = np.tile(R,C)
+  RGB = np.reshape(RGB,(C,H_p,W_p))
+  RGB += H*W * np.arange(C).reshape(C,-1,1)
+
+  c1 = RGB.flatten()
+
+  HHWW = HH*WW
+  ind = np.tile(c1,WW).reshape(WW,-1)
+  ind += stride*np.arange(WW).reshape(-1,1)
+  ind = ind.reshape(-1)
+  ind = np.tile(ind,HH)
+  ind = ind.reshape(HH,-1)
+  ind += stride*W * np.arange(HH).reshape(-1,1)
+  ind = ind.flatten()
+  ind = ind.reshape(HHWW, H_p*W_p*C)
+  return ind
 
 def conv_forward(x, w):
     """
@@ -126,6 +152,17 @@ def conv_forward(x, w):
     # to implement the convolution operation by yourself using just numpy     #
     # operations.                                                             #
     ###########################################################################
+    N, C, H, W = x.shape
+    F, _, H_p, W_p = w.shape
+    HH =  H - H_p + 1
+    WW = W - W_p + 1
+    ind = index_generator(C, H, W, H_p, W_p, stride=1)
+    
+    flt_img = x.reshape((N, C*H*W))
+    conv_points  = flt_img[:,ind.flatten()].reshape((N,C*H_p*W_p, HH*WW), order='F')
+    vec_wt = w.reshape((F, C*H_p*W_p)).T
+    out = conv_points.transpose(0,2,1) @ vec_wt
+    out = out.transpose(0,2,1).reshape((N, F, HH, WW))
     
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -152,7 +189,11 @@ def conv_backward(dout, cache):
     # to implement the convolution operation by yourself using just numpy     #
     # operations.                                                             #
     ###########################################################################
-
+    _,_, hp, wp = w.shape
+    dout_p = np.pad(dout, ((0,0),(0,0),(hp-1,hp-1),(wp-1,wp-1)), constant_values=((0,0),(0,0),(0,0), (0,0)))
+    dx, _ = conv_forward(dout_p, w[:,:,::-1,::-1].transpose(1,0,2,3))
+    dw, _ = conv_forward(x.transpose(1,0,2,3),dout.transpose(1,0,2,3))
+    dw = dw.transpose(1,0,2,3)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -180,12 +221,27 @@ def max_pool_forward(x, pool_param):
     ###########################################################################
     # TODO: Implement the max-pooling forward pass                            #
     ###########################################################################
+    N, C, H, W = x.shape
+    ph = pool_param['pool_height']
+    pw = pool_param['pool_width']
+    s = pool_param['stride']
 
+    H_prime = 1 + (H - ph) // s
+    W_prime = 1 + (W - pw) // s
+
+    ind = index_generator(C=1, H=H, W=W, H_p=ph, W_p=pw, stride=s)
+    flt_x = x.reshape((N, C, H*W))
+    extract = flt_x[:,:,ind]
+
+    out = np.max(extract, axis=3, keepdims=True)
+    locs = np.where(extract==out)
+    out = out.reshape(N,C,H_prime,W_prime)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    cache = (x, pool_param)
+    cache = (x, pool_param, ind, locs)
     return out, cache
+
 
 
 def max_pool_backward(dout, cache):
@@ -198,11 +254,24 @@ def max_pool_backward(dout, cache):
     - dx: Gradient with respect to x
     """
     dx = None
-    x, pool_param = cache
+    x, pool_param, ind, locs = cache
     ###########################################################################
     # TODO: Implement the max-pooling backward pass                           #
     ###########################################################################
+    ph = pool_param['pool_height']
+    pw = pool_param['pool_width']
+    s = pool_param['stride']
 
+    dx = np.zeros(x.shape)
+    N, C, H, W = x.shape
+    HH = 1 + (H - ph) // s
+    WW = 1 + (W - ph) // s
+
+    max_indices = ind[(locs[-2:])].reshape(N, C, HH * WW)
+    
+    dYdX = (np.arange(H*W) == max_indices[...,None]).astype(int)
+    dx = dout.reshape(N,C,1,dout.shape[2]*dout.shape[3]) @ dYdX
+    dx = dx.reshape(N,C,H,W)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -240,6 +309,5 @@ def softmax_loss(x, y):
     ###########################################################################
     return loss, dx
 
-# X = np.random.normal(0, 1, (2, 3))
-# Y = np.array([0,2])
-# l,d = softmax_loss(X,Y)
+
+

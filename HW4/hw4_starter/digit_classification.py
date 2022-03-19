@@ -16,22 +16,22 @@ def main():
     y_test = mnist['y_test']
 
     # data preprocessing for neural network with fully-connected layers
-    data = {
-        'X_train': np.array(x_train[:55000], np.float32).reshape((55000, -1)),  # training data
-        'y_train': np.array(y_train[:55000], np.int32),  # training labels
-        'X_val': np.array(x_train[55000:], np.float32).reshape((5000, -1)),  # validation data
-        'y_val': np.array(y_train[55000:], np.int32),  # validation labels
-    }
-    model = softmax.SoftmaxClassifier(hidden_dim=250)
+    # data = {
+    #     'X_train': np.array(x_train[:55000], np.float32).reshape((55000, -1)),  # training data
+    #     'y_train': np.array(y_train[:55000], np.int32),  # training labels
+    #     'X_val': np.array(x_train[55000:], np.float32).reshape((5000, -1)),  # validation data
+    #     'y_val': np.array(y_train[55000:], np.int32),  # validation labels
+    # }
+    # model = softmax.SoftmaxClassifier(hidden_dim=250)
 
     # data preprocessing for neural network with convolutional layers
-    # data = {
-    #    'X_train': np.array(x_train[:55000], np.float32).reshape((55000, 1, 28, 28)),  # training data
-    #    'y_train': np.array(y_train[:55000], np.int32),  # training labels
-    #    'X_val': np.array(x_train[55000:], np.float32).reshape((5000, 1, 28, 28)),  # validation data
-    #    'y_val': np.array(y_train[55000:], np.int32),  # validation labels
-    # }
-    # model = cnn.ConvNet(hidden_dim=100)
+    data = {
+       'X_train': np.array(x_train[:55000], np.float32).reshape((55000, 1, 28, 28)),  # training data
+       'y_train': np.array(y_train[:55000], np.int32),  # training labels
+       'X_val': np.array(x_train[55000:], np.float32).reshape((5000, 1, 28, 28)),  # validation data
+       'y_val': np.array(y_train[55000:], np.int32),  # validation labels
+    }
+    model = cnn.ConvNet(hidden_dim=100)
     # the update rule of 'adam' can be used to replace 'sgd' if it is helpful.
     s = solver.Solver(model, data,
                            update_rule='sgd',
@@ -49,8 +49,8 @@ def main():
     plt.show()
     plt.close()
 
-    test_acc = s.check_accuracy(X=np.array(x_test, np.float32).reshape((10000, -1)), y=y_test)
-    # test_acc = solver.check_accuracy(X=np.array(x_test, np.float32).reshape((10000, 1, 28, 28)), y=y_test)
+    #test_acc = s.check_accuracy(X=np.array(x_test, np.float32).reshape((10000, -1)), y=y_test)
+    test_acc = s.check_accuracy(X=np.array(x_test, np.float32).reshape((10000, 1, 28, 28)), y=y_test)
     print('Test accuracy', test_acc)
 
 

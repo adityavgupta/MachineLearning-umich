@@ -47,7 +47,14 @@ class ConvNet(object):
     # shape of features input into the hidden fully-connected layer, in terms  #
     # of the input dimension and size of filter.                               #
     ############################################################################
-
+    C, H, W = input_dim
+    hH = 1+(H - filter_size) // 2
+    hW = 1+(W - filter_size) // 2
+    self.params['W1'] = np.random.normal(loc=0.0, scale=weight_scale, size=(num_filters,C, filter_size, filter_size))
+    self.params['W2'] = np.random.normal(scale = weight_scale, size = (num_filters * hH * hW, hidden_dim))
+    self.params['b2'] = np.zeros(hidden_dim)
+    self.params['W3'] = np.random.normal(loc=0.0, scale = weight_scale, size = (hidden_dim, num_classes))
+    self.params['b3'] = np.zeros(num_classes)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -73,7 +80,12 @@ class ConvNet(object):
     # computing the class scores for X and storing them in the scores          #
     # variable.                                                                #
     ############################################################################
-
+    conv_out, conv_c = conv_forward(X,W1)
+    r1_o, r1_c = relu_forward(conv_out)
+    p_o, p_c = max_pool_forward(r1_o, pool_param)
+    fc1_o, fc1_c = fc_forward(p_o.reshape(p_o.shape[0], p_o.shape[1]*p_o.shape[2]*p_o.shape[3]), W2, b2)
+    r2_o, r2_c = relu_forward(fc1_o)
+    scores, fc2_c = fc_forward(r2_o, W3, b3) 
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -88,7 +100,14 @@ class ConvNet(object):
     # data loss using softmax, and make sure that grads[k] holds the gradients #
     # for self.params[k].                                                      #
     ############################################################################
-
+    loss, dx = softmax_loss(scores, y)
+    dx, grads['W3'], grads['b3'] = fc_backward(dx, fc2_c)
+    dx = relu_backward(dx, r2_c)
+    dx, grads['W2'], grads['b2'] = fc_backward(dx, fc1_c)
+    #dx = dx.reshape(p_c[0].shape[0], p_c[0].shape[1], p_c[0].shape[2]//2, p_c[0].shape[3]//2)
+    dx = max_pool_backward(dx.reshape(p_o.shape), p_c)
+    dx = relu_backward(dx, r1_c)
+    dx, grads['W1'] = conv_backward(dx, conv_c)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
