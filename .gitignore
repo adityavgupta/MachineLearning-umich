@@ -8,5 +8,8 @@ HW4/q4c2.png
 HW4/q4c4.png
 *.pyc
 *.jpg
-HW4/hw_starter/coco_captioning/
-HW4/hw_starter/hymenoptera_data/
+*.png
+*.h5
+HW4/hw_starter/coco_captioning/*
+HW4/hw_starter/hymenoptera_data/*
+
