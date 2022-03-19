@@ -190,7 +190,7 @@ def conv_backward(dout, cache):
     # operations.                                                             #
     ###########################################################################
     _,_, hp, wp = w.shape
-    dout_p = np.pad(dout, ((0,0),(0,0),(hp-1,hp-1),(wp-1,wp-1)), constant_values=((0,0),(0,0),(0,0), (0,0)))
+    dout_p = np.pad(dout, ((0,0),(0,0),(hp-1,hp-1),(wp-1,wp-1)), mode='constant',constant_values=((0,0),(0,0),(0,0), (0,0)))
     dx, _ = conv_forward(dout_p, w[:,:,::-1,::-1].transpose(1,0,2,3))
     dw, _ = conv_forward(x.transpose(1,0,2,3),dout.transpose(1,0,2,3))
     dw = dw.transpose(1,0,2,3)
@@ -232,14 +232,20 @@ def max_pool_forward(x, pool_param):
     ind = index_generator(C=1, H=H, W=W, H_p=ph, W_p=pw, stride=s)
     flt_x = x.reshape((N, C, H*W))
     extract = flt_x[:,:,ind]
-
     out = np.max(extract, axis=3, keepdims=True)
-    locs = np.where(extract==out)
     out = out.reshape(N,C,H_prime,W_prime)
+
+    stacked_ind = np.repeat(ind[np.newaxis,...], C, axis=0)
+    stacked_ind = np.repeat(stacked_ind[np.newaxis,...],N,axis=0)
+    stacked_ind = np.expand_dims(stacked_ind, axis=3)
+    max_locs_ext = np.expand_dims(np.argmax(extract, axis=3),-1)
+
+    onehot = (np.arange(ph*pw) == max_locs_ext[...,None]).astype(int)
+    im_locs = (stacked_ind @ onehot.transpose(0,1,2,4,3)).squeeze()
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    cache = (x, pool_param, ind, locs)
+    cache = (x, pool_param, im_locs)
     return out, cache
 
 
@@ -254,7 +260,7 @@ def max_pool_backward(dout, cache):
     - dx: Gradient with respect to x
     """
     dx = None
-    x, pool_param, ind, locs = cache
+    x, pool_param, im_locs = cache
     ###########################################################################
     # TODO: Implement the max-pooling backward pass                           #
     ###########################################################################
@@ -264,12 +270,10 @@ def max_pool_backward(dout, cache):
 
     dx = np.zeros(x.shape)
     N, C, H, W = x.shape
-    HH = 1 + (H - ph) // s
-    WW = 1 + (W - ph) // s
+    _,_, HH, WW = dout.shape
 
-    max_indices = ind[(locs[-2:])].reshape(N, C, HH * WW)
     
-    dYdX = (np.arange(H*W) == max_indices[...,None]).astype(int)
+    dYdX = (np.arange(H*W) == im_locs[...,None]).astype(int)
     dx = dout.reshape(N,C,1,dout.shape[2]*dout.shape[3]) @ dYdX
     dx = dx.reshape(N,C,H,W)
     ###########################################################################
