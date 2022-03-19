@@ -1,12 +1,12 @@
 HW4/hw4_starter/layers.pyc
 HW4/hw4_starter/rnn_layers.pyc
-HW1/.DS_Store
-HW1/.DS_Store
-HW1/.DS_Store
-HW4/.DS_Store
+*.DS_Store
 HW4/q4_trainingloss.png
 HW4/q4c1.png
 HW4/q4c3.png
 HW4/q4c2.png
 HW4/q4c4.png
 *.pyc
+*.jpg
+HW4/hw_starter/coco_captioning/
+HW4/hw_starter/hymenoptera_data/
